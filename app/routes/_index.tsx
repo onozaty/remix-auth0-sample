@@ -16,14 +16,16 @@ export default function Index() {
   console.log(data);
 
   return (
-    <div>
-      <h1>Login succeeded</h1>
+    <div className="m-4">
+      <h1 className="text-xl mb-2">Login succeeded</h1>
       {data.user && (
         <>
+          <p className="mb-2">{data.user.displayName}</p>
           <Form action="auth/logout" method="post">
-            <button>Logout</button>
+            <button className="bg-gray-500 hover:bg-gray-400 text-white rounded px-4 py-2">
+              Logout
+            </button>
           </Form>
-          <p>{data.user.displayName}</p>
         </>
       )}
     </div>
