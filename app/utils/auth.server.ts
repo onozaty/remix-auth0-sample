@@ -1,6 +1,8 @@
+import { User } from "@prisma/client";
 import { createCookieSessionStorage } from "@remix-run/node";
 import { Authenticator } from "remix-auth";
-import { Auth0Profile, Auth0Strategy } from "remix-auth-auth0";
+import { Auth0Strategy } from "remix-auth-auth0";
+import { prisma } from "~/utils/db.server";
 
 export const AUTH0_RETURN_TO_URL = process.env.AUTH0_RETURN_TO_URL!;
 export const AUTH0_CALLBACK_URL = process.env.AUTH0_CALLBACK_URL!;
@@ -21,7 +23,7 @@ const sessionStorage = createCookieSessionStorage({
   },
 });
 
-export const authenticator = new Authenticator<Auth0Profile>(sessionStorage);
+export const authenticator = new Authenticator<User>(sessionStorage);
 
 const auth0Strategy = new Auth0Strategy(
   {
@@ -31,10 +33,20 @@ const auth0Strategy = new Auth0Strategy(
     domain: AUTH0_DOMAIN,
   },
   async ({ profile }) => {
-    //
-    // Use the returned information to process or write to the DB.
-    //
-    return profile;
+    const email = profile.emails![0].value;
+    let user = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+        },
+      });
+    }
+    return user;
   }
 );
 

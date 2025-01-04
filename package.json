@@ -14,6 +14,7 @@
     "db:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@epic-web/remember": "^1.1.0",
     "@prisma/client": "^6.1.0",
     "@remix-run/express": "^2.15.2",
     "@remix-run/node": "^2.15.2",

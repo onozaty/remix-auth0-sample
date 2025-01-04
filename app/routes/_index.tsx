@@ -11,16 +11,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-  const data = useLoaderData<typeof loader>();
-
-  console.log(data);
+  const { user } = useLoaderData<typeof loader>();
 
   return (
     <div className="m-4">
       <h1 className="text-xl mb-2">Login succeeded</h1>
-      {data.user && (
+      {user && (
         <>
-          <p className="mb-2">{data.user.displayName}</p>
+          <p className="mb-2">{user.email}</p>
           <Form action="auth/logout" method="post">
             <button className="bg-gray-500 hover:bg-gray-400 text-white rounded px-4 py-2">
               Logout
