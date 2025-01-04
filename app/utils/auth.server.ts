@@ -1,5 +1,5 @@
 import { User } from "@prisma/client";
-import { createCookieSessionStorage } from "@remix-run/node";
+import { createCookieSessionStorage, redirect } from "@remix-run/node";
 import { Authenticator } from "remix-auth";
 import { Auth0Strategy } from "remix-auth-auth0";
 import { prisma } from "~/utils/db.server";
@@ -23,7 +23,7 @@ const sessionStorage = createCookieSessionStorage({
   },
 });
 
-export const authenticator = new Authenticator<User>(sessionStorage);
+const authenticator = new Authenticator<User>(sessionStorage);
 
 const auth0Strategy = new Auth0Strategy(
   {
@@ -52,4 +52,35 @@ const auth0Strategy = new Auth0Strategy(
 
 authenticator.use(auth0Strategy);
 
-export const { getSession, commitSession, destroySession } = sessionStorage;
+export const isAuthenticated = async (request: Request) => {
+  return await authenticator.isAuthenticated(request, {
+    failureRedirect: "/login",
+  });
+};
+
+export const authenticate = async (request: Request) => {
+  return await authenticator.authenticate("auth0", request);
+};
+
+export const callbackAuthenticate = async (request: Request) => {
+  return await authenticator.authenticate("auth0", request, {
+    successRedirect: "/",
+    failureRedirect: "/login",
+  });
+};
+
+export const logout = async (request: Request) => {
+  const session = await sessionStorage.getSession(
+    request.headers.get("Cookie")
+  );
+  const logoutURL = new URL(AUTH0_LOGOUT_URL);
+
+  logoutURL.searchParams.set("client_id", AUTH0_CLIENT_ID);
+  logoutURL.searchParams.set("returnTo", AUTH0_RETURN_TO_URL);
+
+  return redirect(logoutURL.toString(), {
+    headers: {
+      "Set-Cookie": await sessionStorage.destroySession(session),
+    },
+  });
+};

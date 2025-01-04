@@ -1,9 +1,6 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { authenticator } from "~/utils/auth.server";
+import { callbackAuthenticate } from "~/utils/auth.server";
 
-export const loader = ({ request }: LoaderFunctionArgs) => {
-  return authenticator.authenticate("auth0", request, {
-    successRedirect: "/",
-    failureRedirect: "/login",
-  });
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return await callbackAuthenticate(request);
 };
