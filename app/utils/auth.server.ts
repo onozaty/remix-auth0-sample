@@ -65,7 +65,7 @@ export const authenticate = async (request: Request) => {
 export const callbackAuthenticate = async (request: Request) => {
   return await authenticator.authenticate("auth0", request, {
     successRedirect: "/",
-    failureRedirect: "/login",
+    throwOnError: true,
   });
 };
 
