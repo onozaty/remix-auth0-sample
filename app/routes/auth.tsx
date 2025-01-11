@@ -4,5 +4,5 @@ import { authenticate } from "~/utils/auth.server";
 export const loader = () => redirect("/");
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  return await authenticate(request);
+  await authenticate(request);
 };

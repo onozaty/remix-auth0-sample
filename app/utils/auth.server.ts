@@ -59,11 +59,13 @@ export const isAuthenticated = async (request: Request) => {
 };
 
 export const authenticate = async (request: Request) => {
-  return await authenticator.authenticate("auth0", request);
+  await authenticator.authenticate("auth0", request, {
+    successRedirect: "/",
+  });
 };
 
 export const callbackAuthenticate = async (request: Request) => {
-  return await authenticator.authenticate("auth0", request, {
+  await authenticator.authenticate("auth0", request, {
     successRedirect: "/",
     throwOnError: true,
   });
