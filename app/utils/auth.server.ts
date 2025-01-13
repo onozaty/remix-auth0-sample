@@ -1,5 +1,5 @@
 import { User } from "@prisma/client";
-import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { createCookieSessionStorage, redirect, Session } from "@remix-run/node";
 import { Authenticator } from "remix-auth";
 import { Auth0Strategy } from "remix-auth-auth0";
 import { prisma } from "~/utils/db.server";
@@ -12,7 +12,7 @@ export const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN!;
 export const AUTH0_LOGOUT_URL = process.env.AUTH0_LOGOUT_URL!;
 export const SECRETS = process.env.SECRETS!;
 
-const sessionStorage = createCookieSessionStorage({
+export const sessionStorage = createCookieSessionStorage({
   cookie: {
     name: "_remix_session",
     sameSite: "lax",
@@ -52,10 +52,8 @@ const auth0Strategy = new Auth0Strategy(
 
 authenticator.use(auth0Strategy);
 
-export const isAuthenticated = async (request: Request) => {
-  return await authenticator.isAuthenticated(request, {
-    failureRedirect: "/login",
-  });
+export const isAuthenticated = async (session: Session) => {
+  return await authenticator.isAuthenticated(session);
 };
 
 export const authenticate = async (request: Request) => {

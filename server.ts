@@ -1,10 +1,18 @@
 import { createRequestHandler } from "@remix-run/express";
 import compression from "compression";
-import express from "express";
+import express, { Request } from "express";
 import { EnvHttpProxyAgent, setGlobalDispatcher } from "undici";
+import { isAuthenticated, sessionStorage } from "~/utils/auth.server";
 
 if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY) {
   setGlobalDispatcher(new EnvHttpProxyAgent());
+}
+
+export interface CustomRequest extends Request {
+  user?: {
+    userId: number;
+    email: string;
+  };
 }
 
 const viteDevServer =
@@ -21,6 +29,11 @@ const remixHandler = createRequestHandler({
   build: viteDevServer
     ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
     : await import(BUILD_INDEX_PATH),
+  getLoadContext(req: CustomRequest) {
+    return {
+      user: req.user,
+    };
+  },
 });
 
 const app = express();
@@ -45,9 +58,44 @@ if (viteDevServer) {
 // more aggressive with this caching.
 app.use(express.static("build/client", { maxAge: "1h" }));
 
-app.use((req, res, next) => {
-  const { method, url } = req;
-  console.log(`Request started: ${method} ${url}`);
+app.use(async (req: CustomRequest, res, next) => {
+  try {
+    if (
+      req.path !== "/login" &&
+      req.path !== "/__manifest" &&
+      !req.path.startsWith("/auth")
+    ) {
+      const session = await sessionStorage.getSession(req.headers.cookie);
+      const user = await isAuthenticated(session);
+      if (user === null) {
+        const { method, url } = req;
+        console.log(`Request unauthorized: ${method} ${url}`);
+        // ログインへリダイレクト
+        if (req.header("Accept")?.includes("text/html")) {
+          return res.redirect("/login");
+        } else {
+          // APIリクエストの場合は `X-Remix-Redirect` ヘッダーを返す
+          return res
+            .status(204)
+            .set({
+              "X-Remix-Redirect": "/login",
+              "X-Remix-Status": "302",
+            })
+            .end();
+        }
+      }
+
+      req.user = user;
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.use((req: CustomRequest, res, next) => {
+  const { method, url, user } = req;
+  console.log(`Request started: ${method} ${url} userId:${user?.userId}`);
 
   const start = performance.now();
 

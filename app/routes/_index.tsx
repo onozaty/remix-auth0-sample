@@ -1,9 +1,11 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
-import { isAuthenticated } from "~/utils/auth.server";
+import { Form, Link, useLoaderData } from "@remix-run/react";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const user = await isAuthenticated(request);
+export const loader = async ({ context }: LoaderFunctionArgs) => {
+  const user = context.user as {
+    userId: number;
+    email: string;
+  };
 
   return { user };
 };
@@ -22,6 +24,7 @@ export default function Index() {
               Logout
             </button>
           </Form>
+          <Link to="/hoge">Hoge</Link>
         </>
       )}
     </div>
