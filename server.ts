@@ -17,10 +17,11 @@ const viteDevServer =
         })
       );
 
+const BUILD_INDEX_PATH = "./index.js";
 const remixHandler = createRequestHandler({
   build: viteDevServer
     ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
-    : await import("./build/server/index.js"),
+    : await import(BUILD_INDEX_PATH),
 });
 
 const app = express();
